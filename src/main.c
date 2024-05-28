@@ -213,3 +213,81 @@ int showOptionsMenu() {
             }
         }
     }
+
+
+    screenClear();
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2);
+    printf("Escolha o número de pontos (1-99): ");
+    screenUpdate();
+    char input[3];
+    int numPoints;
+    scanf("%2s", input);
+    numPoints = atoi(input);
+    maxPoints = (numPoints >= 1 && numPoints <= 99) ? numPoints : 10;
+
+    return 1;
+}
+
+int showEndMenu(int scorePlayer, int scoreCPU) {
+    screenClear();
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2 - 1);
+    printf("Placar Final:");
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2);
+    printf("Jogador: %d", scorePlayer);
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2 + 1);
+    printf("CPU: %d", scoreCPU);
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2 + 3);
+    printf("Pressione 'p' para voltar ao menu");
+    screenGotoxy(GAME_WIDTH / 2 - 8, GAME_HEIGHT / 2 + 4);
+    printf("Pressione 'q' para sair");
+    screenUpdate();
+    char key;
+    while (1) {
+        if (keyhit()) {
+            key = readch();
+            if (key == START_KEY) {
+                return 1;
+            } else if (key == EXIT_KEY) {
+                return 0;
+            }
+        }
+    }
+}
+
+int main() {
+    int playAgain;
+
+    screenInit(0);
+    keyboardInit();
+
+    do {
+        Ball ball;
+        Paddle player, cpu;
+        Barrier* barriers = NULL;
+        initGame(&ball, &player, &cpu, &barriers);
+
+        playAgain = showOptionsMenu();
+
+        if (playAgain) {
+            int scorePlayer = 0, scoreCPU = 0;
+            while (scorePlayer < maxPoints && scoreCPU < maxPoints) {
+                updateBall(&ball, &player, &cpu, &scorePlayer, &scoreCPU, &barriers);
+                updatePlayer(&player);
+                updateCPU(&cpu, &ball);
+                drawGame(&ball, &player, &cpu, scorePlayer, scoreCPU, &barriers);
+                screenUpdate();
+                usleep(50000);
+                screenClear();
+            }
+
+            destroyBarriers(barriers);
+
+            playAgain = showEndMenu(scorePlayer, scoreCPU);
+        }
+    } while (playAgain);
+
+    screenDestroy();
+    keyboardDestroy();
+
+    return 0;
+}
